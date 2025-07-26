@@ -57,22 +57,43 @@ class _HomePageState extends State<HomePage> {
         title: 'GroupProject_S25',
         returnButton: false,
       ),
-      drawer: tabletLayout ?
-        Drawer(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: navButtons,
-          ),
-        ) : null,
       body: SafeArea(
         bottom: true,
         child: SingleChildScrollView(
-          child: Column(
+          child: tabletLayout ?
+          Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    flex: 5,
+                    child: Column(
+                      children: [
+                        navButtons[0],
+                        navButtons[1],
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    flex: 5,
+                    child: Column(
+                      children: [
+                        navButtons[2],
+                        navButtons[3],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              CopyrightFooter(content: localizations.copyright),
+            ],
+          ):
+          Column(
             children: [
               ...navButtons,
               CopyrightFooter(content: localizations.copyright),
             ],
-          ),
+          )
         ),
       ),
     );
