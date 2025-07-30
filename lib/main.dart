@@ -13,7 +13,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:ac_mobile_final/pages/home.dart';
 import 'package:ac_mobile_final/services/datasource.dart';
-import 'package:ac_mobile_final/services/cache/customer.dart';
+import 'package:ac_mobile_final/services/appcache.dart';
 import 'package:encrypt_shared_preferences/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -25,7 +25,7 @@ void main() async {
 
   await DataSource.init();
   await EncryptedSharedPreferences.initialize('1234567890abcdef');
-  await CustomerCache.init();
+  await AppCache.init();
 
   runApp(const MyApp());
 }

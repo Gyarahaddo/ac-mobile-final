@@ -16,7 +16,7 @@ import 'package:ac_mobile_final/components/navbar.dart';
 import 'package:ac_mobile_final/components/message.dart';
 import 'package:ac_mobile_final/components/footer.dart';
 import 'package:ac_mobile_final/services/datasource.dart';
-import 'package:ac_mobile_final/services/cache/customer.dart';
+import 'package:ac_mobile_final/services/appcache.dart';
 import 'package:ac_mobile_final/schemas/customer.dart';
 import 'package:ac_mobile_final/schemas/reservation.dart';
 import 'package:ac_mobile_final/pages/customerOps/detail.dart';
@@ -67,14 +67,14 @@ class _CustomerPageState extends State<CustomerPage> {
     super.initState();
     Future.delayed(Duration.zero, () async {
       await _dataSource.syncAll();
-      await CustomerCache.syncFromCustomerCache();
+      await AppCache.syncFromCustomerCache();
 
       reservations = DataSource.reservations;
 
       setState(() {
         customers = DataSource.customers;
 
-        if (CustomerCache.firstname != '') _firstnameController.text = CustomerCache.firstname;
+        if (AppCache.firstname != '') _firstnameController.text = AppCache.firstname;
       });
     });
   }
@@ -166,12 +166,12 @@ class _CustomerPageState extends State<CustomerPage> {
         ),
       );
 
-      CustomerCache.firstname = _firstnameController.text;
-      CustomerCache.lastname = _lastnameController.text;
-      CustomerCache.address = _addressController.text;
-      CustomerCache.birthday = _birthdayController.text;
+      AppCache.firstname = _firstnameController.text;
+      AppCache.lastname = _lastnameController.text;
+      AppCache.address = _addressController.text;
+      AppCache.birthday = _birthdayController.text;
 
-      await CustomerCache.syncToCustomerCache();
+      await AppCache.syncToCustomerCache();
 
       SnackMessage.showMessage(context, localizations.msg2addCustomer, 2);
 
@@ -222,12 +222,11 @@ class _CustomerPageState extends State<CustomerPage> {
 
     /// Resets the customer form and clears cached fields.
     Future<void> resetCustomer() async {
-      print('DEBUG::Customer Page -> Call "_resetCustomer()"');
-      CustomerCache.firstname = '';
-      CustomerCache.lastname = '';
-      CustomerCache.address = '';
-      CustomerCache.birthday = '';
-      await CustomerCache.syncToCustomerCache();
+      AppCache.firstname = '';
+      AppCache.lastname = '';
+      AppCache.address = '';
+      AppCache.birthday = '';
+      await AppCache.syncToCustomerCache();
 
       setState(() {
         _firstnameController.clear();

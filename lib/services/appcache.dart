@@ -10,8 +10,8 @@ library;
 
 import 'package:encrypt_shared_preferences/provider.dart';
 
-class CustomerCache {
-  static final CustomerCache _instance = CustomerCache._internal();
+class AppCache {
+  static final AppCache _instance = AppCache._internal();
 
   static late EncryptedSharedPreferences _enPreferences;
   static String firstname = '';
@@ -19,9 +19,9 @@ class CustomerCache {
   static String address = '';
   static String birthday = '';
 
-  CustomerCache._internal();
+  AppCache._internal();
 
-  static CustomerCache get instance => _instance;
+  static AppCache get instance => _instance;
 
   static Future<void> init() async {
     _enPreferences = EncryptedSharedPreferences.getInstance();
