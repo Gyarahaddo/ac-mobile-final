@@ -23,9 +23,11 @@ import 'package:ac_mobile_final/pages/customerOps/detail.dart';
 import 'package:ac_mobile_final/pages/customerOps/input.dart';
 import 'package:ac_mobile_final/pages/customerOps/update.dart';
 
-
+/// The main page to manage customers.
+///
+/// Provides insert, update, and detail view of customer records.
 class CustomerPage extends StatefulWidget {
-
+  /// Creates a [CustomerPage].
   const CustomerPage({
     super.key,
   });
@@ -35,7 +37,9 @@ class CustomerPage extends StatefulWidget {
 }
 
 class _CustomerPageState extends State<CustomerPage> {
+  /// UUID generator for customer IDs.
   final uuid = Uuid();
+  /// Data source instance to interact with the backend.
   final DataSource _dataSource = DataSource.instance;
 
   // Controllers for insert.
@@ -50,8 +54,11 @@ class _CustomerPageState extends State<CustomerPage> {
   final TextEditingController _addressUpdate = TextEditingController();
   final TextEditingController _birthdayUpdate = TextEditingController();
 
+  /// List of all customer records.
   List<Customer> customers = [];
+  /// List of all reservation records.
   List<Reservation> reservations = [];
+  /// Currently selected customer for detail or update.
   Customer? selectedCustomer;
 
 
@@ -59,17 +66,6 @@ class _CustomerPageState extends State<CustomerPage> {
   void initState() {
     super.initState();
     Future.delayed(Duration.zero, () async {
-      // Insert test records.
-      // await _dataSource.addCustomer(
-      //   Customer(
-      //       id: uuid.v1(),
-      //       firstname: 'Johnny',
-      //       lastname: 'Silverhand',
-      //       address: 'Pacifica "2nd Amendment" Gunshop, 2nd Floor, Pacifica 301 Street, Night City, USA',
-      //       birthday: '2077-07-04',
-      //   ),
-      // );
-
       await _dataSource.syncAll();
       await CustomerCache.syncFromCustomerCache();
 
@@ -99,18 +95,21 @@ class _CustomerPageState extends State<CustomerPage> {
 
     final localizations = AppLocalizations.of(context)!;
 
+    /// Clears the current selection.
     void unselect() {
       setState(() {
         selectedCustomer = null;
       });
     }
 
+    /// Selects a customer to show details.
     void selected(Customer customer) {
       setState(() {
         selectedCustomer = customer;
       });
     }
 
+    /// Deletes a customer if no reservation is linked.
     Future<void> removeCustomer(Customer? customer) async {
       if (customer == null) return;
 
@@ -135,6 +134,7 @@ class _CustomerPageState extends State<CustomerPage> {
       }
     }
 
+    /// Inserts a new customer based on the form inputs.
     Future<void> insertCustomer() async {
       if (_firstnameController.text.trim().isEmpty) {
         SnackMessage.showMessage(context, localizations.msg2noFirstname, 1);
@@ -180,6 +180,7 @@ class _CustomerPageState extends State<CustomerPage> {
       });
     }
 
+    /// Updates an existing customer with the new form values.
     Future<void> updateCustomer(Customer customer) async {
       if (_firstnameUpdate.text.trim().isEmpty &&
           _lastnameUpdate.text.trim().isEmpty &&
@@ -219,6 +220,7 @@ class _CustomerPageState extends State<CustomerPage> {
       });
     }
 
+    /// Resets the customer form and clears cached fields.
     Future<void> resetCustomer() async {
       print('DEBUG::Customer Page -> Call "_resetCustomer()"');
       CustomerCache.firstname = '';
