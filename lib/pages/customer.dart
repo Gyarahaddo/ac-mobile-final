@@ -1,6 +1,28 @@
+/// CST2335 Final Project.
+///
+/// Created: July 25, 2025
+/// Group Members:
+///  - Lingfeng "Galahad" Zhao (zhao0291@algonquinlive.com)
+///  - Jesse Proulx (prou0212@algonquinlive.com)
+///  - Xinghan Xu (xu000334@algonquinlive.com)
+///  - Luca Barbesin (barb0285@algonquinlive.com)
+library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:uuid/uuid.dart';
 import 'package:ac_mobile_final/components/navbar.dart';
+import 'package:ac_mobile_final/components/message.dart';
+import 'package:ac_mobile_final/components/footer.dart';
+import 'package:ac_mobile_final/services/datasource.dart';
+import 'package:ac_mobile_final/services/cache/customer.dart';
+import 'package:ac_mobile_final/schemas/customer.dart';
+import 'package:ac_mobile_final/schemas/reservation.dart';
+import 'package:ac_mobile_final/pages/customerOps/detail.dart';
+import 'package:ac_mobile_final/pages/customerOps/input.dart';
+import 'package:ac_mobile_final/pages/customerOps/update.dart';
+
 
 class CustomerPage extends StatefulWidget {
 
@@ -13,23 +35,366 @@ class CustomerPage extends StatefulWidget {
 }
 
 class _CustomerPageState extends State<CustomerPage> {
+  final uuid = Uuid();
+  final DataSource _dataSource = DataSource.instance;
+
+  // Controllers for insert.
+  final TextEditingController _firstnameController = TextEditingController();
+  final TextEditingController _lastnameController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _birthdayController = TextEditingController();
+
+  // Controllers for update.
+  final TextEditingController _firstnameUpdate = TextEditingController();
+  final TextEditingController _lastnameUpdate = TextEditingController();
+  final TextEditingController _addressUpdate = TextEditingController();
+  final TextEditingController _birthdayUpdate = TextEditingController();
+
+  List<Customer> customers = [];
+  List<Reservation> reservations = [];
+  Customer? selectedCustomer;
+
+
   @override
   void initState() {
     super.initState();
     Future.delayed(Duration.zero, () async {
+      // Insert test records.
+      // await _dataSource.addCustomer(
+      //   Customer(
+      //       id: uuid.v1(),
+      //       firstname: 'Johnny',
+      //       lastname: 'Silverhand',
+      //       address: 'Pacifica "2nd Amendment" Gunshop, 2nd Floor, Pacifica 301 Street, Night City, USA',
+      //       birthday: '2077-07-04',
+      //   ),
+      // );
+
+      await _dataSource.syncAll();
+      await CustomerCache.syncFromCustomerCache();
+
+      reservations = DataSource.reservations;
+
+      setState(() {
+        customers = DataSource.customers;
+
+        if (CustomerCache.firstname != '') _firstnameController.text = CustomerCache.firstname;
+      });
     });
   }
 
   @override
+  void dispose() {
+    _firstnameController.dispose();
+    _lastnameController.dispose();
+    _addressController.dispose();
+    _birthdayController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    bool tabletLayout = screenWidth > 600;
+
     final localizations = AppLocalizations.of(context)!;
+
+    void unselect() {
+      setState(() {
+        selectedCustomer = null;
+      });
+    }
+
+    void selected(Customer customer) {
+      setState(() {
+        selectedCustomer = customer;
+      });
+    }
+
+    Future<void> removeCustomer(Customer? customer) async {
+      if (customer == null) return;
+
+      Reservation? targetReservation = reservations
+          .cast<Reservation?>()
+          .firstWhere((res) => res?.customerId == customer.id,
+        orElse: () => null,
+      );
+
+      if (targetReservation == null) {
+        await _dataSource.deleteCustomer(customer);
+
+        setState(() {
+          customers = DataSource.customers;
+        });
+      } else {
+        SnackMessage.showMessage(
+            context,
+            localizations.msg2customerHasReservation,
+            3
+        );
+      }
+    }
+
+    Future<void> insertCustomer() async {
+      if (_firstnameController.text.trim().isEmpty) {
+        SnackMessage.showMessage(context, localizations.msg2noFirstname, 1);
+        return;
+      }
+
+      if (_lastnameController.text.trim().isEmpty) {
+        SnackMessage.showMessage(context, localizations.msg2noLastname, 1);
+        return;
+      }
+
+      if (_addressController.text.trim().isEmpty) {
+        SnackMessage.showMessage(context, localizations.msg2noAddress, 1);
+        return;
+      }
+
+      if (_birthdayController.text.trim().isEmpty) {
+        SnackMessage.showMessage(context, localizations.msg2noBirthday, 1);
+        return;
+      }
+
+      await _dataSource.addCustomer(
+        Customer(
+          id: uuid.v1(),
+          firstname: _firstnameController.text,
+          lastname: _lastnameController.text,
+          address: _addressController.text,
+          birthday: _birthdayController.text,
+        ),
+      );
+
+      CustomerCache.firstname = _firstnameController.text;
+      CustomerCache.lastname = _lastnameController.text;
+      CustomerCache.address = _addressController.text;
+      CustomerCache.birthday = _birthdayController.text;
+
+      await CustomerCache.syncToCustomerCache();
+
+      SnackMessage.showMessage(context, localizations.msg2addCustomer, 2);
+
+      setState(() {
+        customers = DataSource.customers;
+      });
+    }
+
+    Future<void> updateCustomer(Customer customer) async {
+      if (_firstnameUpdate.text.trim().isEmpty &&
+          _lastnameUpdate.text.trim().isEmpty &&
+          _addressUpdate.text.trim().isEmpty &&
+          _birthdayUpdate.text.trim().isEmpty
+      ) {
+        SnackMessage.showMessage(context, localizations.msg2noUpdateCustomer, 2);
+        return;
+      }
+
+      String newFirstname = customer.firstname;
+      String newLastname = customer.lastname;
+      String newAddress = customer.address;
+      String newBirthday = customer.birthday;
+
+      if (_firstnameUpdate.text.trim().isNotEmpty) newFirstname = _firstnameUpdate.text;
+      if (_lastnameUpdate.text.trim().isNotEmpty) newLastname = _lastnameUpdate.text;
+      if (_addressUpdate.text.trim().isNotEmpty) newAddress = _addressUpdate.text;
+      if (_birthdayUpdate.text.trim().isNotEmpty) newBirthday = _birthdayUpdate.text;
+
+      await _dataSource.updateCustomer(
+        Customer(
+          id: customer.id,
+          firstname: newFirstname,
+          lastname: newLastname,
+          address: newAddress,
+          birthday: newBirthday,
+        ),
+      );
+
+      setState(() {
+        customers = DataSource.customers;
+        _firstnameUpdate.clear();
+        _lastnameUpdate.clear();
+        _addressUpdate.clear();
+        _birthdayUpdate.clear();
+      });
+    }
+
+    Future<void> resetCustomer() async {
+      print('DEBUG::Customer Page -> Call "_resetCustomer()"');
+      CustomerCache.firstname = '';
+      CustomerCache.lastname = '';
+      CustomerCache.address = '';
+      CustomerCache.birthday = '';
+      await CustomerCache.syncToCustomerCache();
+
+      setState(() {
+        _firstnameController.clear();
+        _lastnameController.clear();
+        _addressController.clear();
+        _birthdayController.clear();
+      });
+    }
+
+    final portraitView = SafeArea(
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            Card(
+              elevation: 0.5,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              clipBehavior: Clip.antiAlias,
+              child: Image.asset(
+                'assets/images/customer_btn.png',
+                height: 150,
+                fit: BoxFit.cover,
+              )
+            ),
+            InputsBar(
+              firstnameController: _firstnameController,
+              lastnameController: _lastnameController,
+              addressController: _addressController,
+              birthdayController: _birthdayController,
+              onClick: insertCustomer,
+              onReset: resetCustomer,
+            ),
+            ...customers.asMap().entries.map((entry) => Container(
+              margin: EdgeInsets.all(10.0),
+              child: Card(
+                elevation: 0.5,
+                child: ListTile(
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  title: Text(
+                    '${entry.value.firstname} ${entry.value.lastname}',
+                    style: GoogleFonts.roboto(),
+                  ),
+                  subtitle: Text(
+                    entry.value.address,
+                    style: GoogleFonts.roboto(),
+                  ),
+                  onLongPress: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UpdateCustomer(
+                          onUpdate: () => updateCustomer(entry.value),
+                          customer: entry.value,
+                          firstnameController: _firstnameUpdate,
+                          lastnameController: _lastnameUpdate,
+                          addressController: _addressUpdate,
+                          birthdayController: _birthdayUpdate,
+                        ),
+                      ),
+                    );
+                  },
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CustomerDetail(
+                          customer: entry.value,
+                          onCancel: unselect,
+                          onRemove: () => removeCustomer(entry.value),
+                          navBar: true,
+                          goBack: true,
+                        )
+                      )
+                    );
+                  },
+                ),
+              ),
+            )),
+            CopyrightFooter(content: localizations.copyright),
+          ],
+        ),
+      )
+    );
+
+    final landscapeView = SafeArea(
+      child: Row(
+        children: [
+          Expanded(
+            flex: 5,
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Card(
+                      elevation: 0.5,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      clipBehavior: Clip.antiAlias,
+                      child: Image.asset(
+                        'assets/images/customer_btn.png',
+                        height: 150,
+                        fit: BoxFit.cover,
+                      )
+                  ),
+                  InputsBar(
+                    firstnameController: _firstnameController,
+                    lastnameController: _lastnameController,
+                    addressController: _addressController,
+                    birthdayController: _birthdayController,
+                    onClick: insertCustomer,
+                    onReset: resetCustomer,
+                  ),
+                  ...customers.asMap().entries.map((entry) => Container(
+                    margin: EdgeInsets.all(10.0),
+                    child: Card(
+                      elevation: 0.5,
+                      child: ListTile(
+                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        title: Text(
+                          '${entry.value.firstname} ${entry.value.lastname}',
+                          style: GoogleFonts.roboto(),
+                        ),
+                        subtitle: Text(
+                          entry.value.address,
+                          style: GoogleFonts.roboto(),
+                        ),
+                        onLongPress: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => UpdateCustomer(
+                                onUpdate: () => updateCustomer(entry.value),
+                                customer: entry.value,
+                                firstnameController: _firstnameUpdate,
+                                lastnameController: _lastnameUpdate,
+                                addressController: _addressUpdate,
+                                birthdayController: _birthdayUpdate,
+                              ),
+                            ),
+                          );
+                        },
+                        onTap: () {
+                          selected(entry.value);
+                        },
+                      ),
+                    ),
+                  )),
+                  CopyrightFooter(content: localizations.copyright),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 5,
+            child: CustomerDetail(
+              customer: selectedCustomer,
+              onCancel: unselect,
+              onRemove: () => removeCustomer(selectedCustomer),
+              navBar: false,
+              goBack: false,
+            ),
+          ),
+        ],
+      ),
+    );
 
     return Scaffold(
       appBar: MainNav(
         title: localizations.btn2customer,
         returnButton: true,
       ),
-      body: Scaffold(),
+      body: tabletLayout ? landscapeView : portraitView,
     );
   }
 }
