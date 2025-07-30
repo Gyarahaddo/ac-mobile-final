@@ -6,22 +6,26 @@
 ///  - Jesse Proulx (prou0212@algonquinlive.com)
 ///  - Xinghan Xu (xu000334@algonquinlive.com)
 ///  - Luca Barbesin (barb0285@algonquinlive.com)
-///
-/// This file contains the entry point and main app class for the Flutter application.
-/// It defines localization support, theme, and home page setup.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:ac_mobile_final/pages/home.dart';
+import 'package:ac_mobile_final/services/datasource.dart';
+import 'package:ac_mobile_final/services/cache/customer.dart';
+import 'package:encrypt_shared_preferences/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// The main entry point of the application.
 ///
 /// Initializes Flutter bindings and runs the root widget [MyApp].
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await DataSource.init();
+  await EncryptedSharedPreferences.initialize('1234567890abcdef');
+  await CustomerCache.init();
 
   runApp(const MyApp());
 }
