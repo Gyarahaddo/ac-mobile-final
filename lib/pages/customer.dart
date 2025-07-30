@@ -58,7 +58,7 @@ class _CustomerPageState extends State<CustomerPage> {
   List<Customer> customers = [];
   /// List of all reservation records.
   List<Reservation> reservations = [];
-  /// Currently selected customer for detail or update.
+  /// Currently selected customer for detail.
   Customer? selectedCustomer;
 
 
