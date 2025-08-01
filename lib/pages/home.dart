@@ -53,7 +53,7 @@ class _HomePageState extends State<HomePage> {
       NavButton(
         btnText: localizations.btn2flight,
         btnImagePath: 'assets/images/flight_btn.png',
-        nextPage: FlightsPage(),
+        nextPage: FlightPage(),
       ),
       NavButton(
         btnText: localizations.btn2reservation,
