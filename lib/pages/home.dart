@@ -18,13 +18,19 @@ import 'package:ac_mobile_final/pages/airplane.dart';
 import 'package:ac_mobile_final/pages/flights.dart';
 import 'package:ac_mobile_final/pages/reservation.dart';
 
+/// The main landing page of the app that provides navigation to
+/// different modules: Customers, Airplanes, Flights, and Reservations.
+///
+/// The layout adapts based on screen width (mobile vs. tablet).
 class HomePage extends StatefulWidget {
+  /// Creates the [HomePage] widget.
   const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
+/// State class for [HomePage].
 class _HomePageState extends State<HomePage> {
   @override
   void initState() {
@@ -34,11 +40,14 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Determine screen width to adjust layout
     double screenWidth = MediaQuery.of(context).size.width;
     bool tabletLayout = screenWidth > 600;
 
+    // Load localization
     final localizations = AppLocalizations.of(context)!;
 
+    // Define navigation buttons
     final navButtons = [
       NavButton(
         btnText: localizations.btn2customer,
