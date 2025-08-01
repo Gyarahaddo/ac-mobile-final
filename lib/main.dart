@@ -69,6 +69,7 @@ class MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       locale: _locale,
+      debugShowCheckedModeBanner: false,
 
       supportedLocales: const [
         Locale('en'),
@@ -84,7 +85,7 @@ class MyAppState extends State<MyApp> {
 
       theme: ThemeData(
         textTheme: GoogleFonts.latoTextTheme(),
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigoAccent),
         useMaterial3: true,
       ),
       home: HomePage(),
