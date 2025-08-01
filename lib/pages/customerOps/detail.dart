@@ -84,7 +84,7 @@ class CustomerDetail extends StatelessWidget {
                   onPressed: () {
                     onRemove();
                     onCancel();
-                    Navigator.pop(context);
+                    if (goBack) Navigator.pop(context);
                   },
                   icon: Icon(Icons.delete),
                   label: Text(localizations.btn2Remove),
