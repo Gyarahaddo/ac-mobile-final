@@ -1,3 +1,13 @@
+/// CST2335 Final Project.
+///
+/// Created: July 25, 2025
+/// Group Members:
+///  - Lingfeng "Galahad" Zhao (zhao0291@algonquinlive.com)
+///  - Jesse Proulx (prou0212@algonquinlive.com)
+///  - Xinghan Xu (xu000334@algonquinlive.com)
+///  - Luca Barbesin (barb0285@algonquinlive.com)
+library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:ac_mobile_final/components/navbar.dart';
@@ -8,13 +18,19 @@ import 'package:ac_mobile_final/pages/airplane.dart';
 import 'package:ac_mobile_final/pages/flights.dart';
 import 'package:ac_mobile_final/pages/reservation.dart';
 
+/// The main landing page of the app that provides navigation to
+/// different modules: Customers, Airplanes, Flights, and Reservations.
+///
+/// The layout adapts based on screen width (mobile vs. tablet).
 class HomePage extends StatefulWidget {
+  /// Creates the [HomePage] widget.
   const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
+/// State class for [HomePage].
 class _HomePageState extends State<HomePage> {
   @override
   void initState() {
@@ -24,11 +40,14 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Determine screen width to adjust layout
     double screenWidth = MediaQuery.of(context).size.width;
     bool tabletLayout = screenWidth > 600;
 
+    // Load localization
     final localizations = AppLocalizations.of(context)!;
 
+    // Define navigation buttons
     final navButtons = [
       NavButton(
         btnText: localizations.btn2customer,
@@ -43,7 +62,7 @@ class _HomePageState extends State<HomePage> {
       NavButton(
         btnText: localizations.btn2flight,
         btnImagePath: 'assets/images/flight_btn.png',
-        nextPage: FlightsPage(),
+        nextPage: FlightPage(),
       ),
       NavButton(
         btnText: localizations.btn2reservation,
@@ -57,22 +76,43 @@ class _HomePageState extends State<HomePage> {
         title: 'GroupProject_S25',
         returnButton: false,
       ),
-      drawer: tabletLayout ?
-        Drawer(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: navButtons,
-          ),
-        ) : null,
       body: SafeArea(
         bottom: true,
         child: SingleChildScrollView(
-          child: Column(
+          child: tabletLayout ?
+          Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    flex: 5,
+                    child: Column(
+                      children: [
+                        navButtons[0],
+                        navButtons[1],
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    flex: 5,
+                    child: Column(
+                      children: [
+                        navButtons[2],
+                        navButtons[3],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              CopyrightFooter(content: localizations.copyright),
+            ],
+          ):
+          Column(
             children: [
               ...navButtons,
               CopyrightFooter(content: localizations.copyright),
             ],
-          ),
+          )
         ),
       ),
     );
